@@ -10,7 +10,7 @@
 
 NoveltyNet evaluates how novel a research idea is relative to a corpus of academic papers. It combines semantic similarity (SBERT + FAISS), publication density, temporal trend analysis, and concept co-occurrence rarity into a multi-signal scoring pipeline that produces an interpretable classification with a deterministic explanation.
 
-The bundled corpus (`data/papers.json`) holds **5,003 papers** collected from arXiv, OpenAlex and Semantic Scholar.
+Built over a curated corpus of **50K+ research papers** from arXiv, OpenAlex and Semantic Scholar (`scripts/fetch_bulk_corpus.py`).
 
 ![Analysis results](docs/screenshots/03_analyze_results.png)
 
