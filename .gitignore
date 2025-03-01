@@ -107,8 +107,9 @@ venv.bak/
 # Generated data (large binary files)
 data/*.faiss
 
-# Keep papers.json tracked (corpus source of truth)
-!data/papers.json
+# Corpus ships compressed; papers.json is decompressed locally on first run
+data/papers.json
+!data/papers.json.gz
 
 # Spyder project settings
 .spyderproject

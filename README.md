@@ -10,7 +10,7 @@
 
 NoveltyNet evaluates how novel a research idea is relative to a corpus of academic papers. It combines semantic similarity (SBERT + FAISS), publication density, temporal trend analysis, and concept co-occurrence rarity into a multi-signal scoring pipeline that produces an interpretable classification with a deterministic explanation.
 
-Built over a curated corpus of **50K+ research papers** from arXiv, OpenAlex and Semantic Scholar (`scripts/fetch_bulk_corpus.py`).
+Built over a curated corpus of **50K+ research papers** (65,263 AI/ML papers from arXiv, OpenAlex and Semantic Scholar), shipped as `data/papers.json.gz` and rebuilt with `scripts/fetch_bulk_corpus.py`.
 
 ![Analysis results](docs/screenshots/03_analyze_results.png)
 
@@ -18,7 +18,7 @@ Built over a curated corpus of **50K+ research papers** from arXiv, OpenAlex and
 
 ```bash
 pip install -r requirements.txt
-python scripts/build_index.py          # embeds data/papers.json -> data/index.faiss
+python scripts/build_index.py          # unpacks data/papers.json.gz, embeds it -> data/index.faiss
 uvicorn app.main:app --port 8000       # API + Swagger at http://localhost:8000/docs
 
 cd frontend && npm install && npm run dev   # React UI at http://localhost:5173
