@@ -139,8 +139,6 @@ dmypy.json
 .DS_Store
 Thumbs.db
 
-# Claude Code local state
-.claude/
 
 # Frontend (Node / Vite)
 frontend/node_modules/
