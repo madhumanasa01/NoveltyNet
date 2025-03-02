@@ -58,36 +58,59 @@ Researchers and reviewers often need to quickly assess whether an idea is genuin
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    U((Researcher)) --> UI[React UI<br/>Vite + Tailwind]
+    UI -->|POST /api/analyze| API[FastAPI]
+
+    subgraph Pipeline[Novelty pipeline]
+        direction TB
+        IDEA[Idea understanding<br/>GPT-4o-mini, or KeyBERT / TF-IDF in lite mode] --> SIM
+        SIM[Semantic retrieval<br/>SBERT all-MiniLM-L6-v2 + FAISS top-20] --> SIG
+        subgraph SIG[Signals]
+            direction LR
+            D[Density<br/>papers in the area]
+            R[Recency<br/>last 3 yrs vs prior 5]
+            X[Cross-link<br/>concept-pair rarity]
+        end
+        SIG --> FV[Feature vector<br/>max / mean / spread similarity + signals]
+        FV --> CL[Classifier<br/>corpus-calibrated thresholds + confidence]
+        CL --> EX[Deterministic explanation<br/>no LLM text generation]
+    end
+
+    API --> IDEA
+    EX --> API
+
+    subgraph Corpus[Corpus: 65K+ papers]
+        SRC[arXiv · OpenAlex · Semantic Scholar] --> PJ[papers.json.gz] --> EMB[SBERT embeddings] --> IDX[(FAISS IndexFlatIP)]
+    end
+    IDX --> SIM
+    PJ --> SIG
 ```
-POST /api/analyze
-        |
-        v
-idea.py (OpenAI GPT-4o-mini)
-  Extract: domains, concepts, applications
 
-        |
-        v
-similarity.py (SentenceTransformer + FAISS)
-  Embed idea text (384-dim, all-MiniLM-L6-v2)
-  Retrieve top-20 similar papers from index
+### An analysis request
 
-        |
-        v
-features.py (signal aggregation)
-  density.py     publication volume in area
-  recency.py     3-year vs 5-year publication trend
-  crosslink.py   concept pair co-occurrence rarity
-
-        |
-        v
-classifier.py (rule-based thresholding)
-  Applies decision logic over feature vector
-
-        |
-        v
-explanation.py (deterministic natural language summary)
-  Produces signal-level explanation without LLM generation
+```mermaid
+sequenceDiagram
+    participant U as Researcher
+    participant A as FastAPI
+    participant L as GPT-4o-mini
+    participant F as FAISS index
+    participant S as Signal modules
+    participant C as Classifier
+    U->>A: POST /api/analyze {"idea": "..."}
+    A->>L: extract domains, concepts, applications
+    L-->>A: tags (lite mode uses KeyBERT instead)
+    A->>F: embed idea, search top-20 papers
+    F-->>A: similar papers + cosine scores
+    A->>S: density, recency, cross-link over the neighbours
+    S-->>A: feature vector
+    A->>C: classify with corpus statistics
+    C-->>A: label, verdict, confidence
+    A-->>U: label + top-5 papers + signal breakdown + explanation
 ```
+
+The five possible labels are **Independent Novelty**, **Cross-Link Novelty**, **Direct Gap Fill**, **Out-of-Domain** and **Uncertain Novelty**. If the idea is essentially the title of an existing paper, the verdict is overridden to *not novel*.
 
 ---
 
@@ -212,7 +235,7 @@ Interactive docs available at `http://localhost:8000/docs`.
 ```bash
 curl -X POST http://localhost:8000/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"idea_text": "Using graph neural networks to predict protein folding pathways in drug discovery"}'
+  -d '{"idea": "Using graph neural networks to predict protein folding pathways in drug discovery"}'
 ```
 
 ### Example Response
